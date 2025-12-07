@@ -1,69 +1,81 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Infliker Admin</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infliker Admin Panel</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css">
 </head>
-<body class="p-4">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+<div class="w-full max-w-4xl">
+
   <!-- Login Form -->
-  <div id="auth">
-    <input type="email" id="email" placeholder="Email" class="border p-2">
-    <input type="password" id="password" placeholder="Password" class="border p-2">
-    <button id="login" class="bg-blue-500 text-white p-2">Login</button>
+  <div id="auth" class="bg-white p-8 rounded shadow-lg">
+    <h1 class="text-2xl font-bold mb-4 text-center">Admin Login</h1>
+    <input type="email" id="email" placeholder="Email" class="border p-2 w-full mb-3 rounded">
+    <input type="password" id="password" placeholder="Password" class="border p-2 w-full mb-3 rounded">
+    <button id="login" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Login</button>
   </div>
 
-  <!-- Post Editor -->
-  <div id="app" style="display:none;">
-    <input type="text" id="title" placeholder="Title" class="border p-2">
-    <input type="text" id="slug" placeholder="Slug" class="border p-2">
-    <textarea id="content" placeholder="Content" class="border p-2"></textarea>
-    <textarea id="excerpt" placeholder="Excerpt" class="border p-2"></textarea>
-    <button id="publish" class="bg-green-500 text-white p-2">Publish</button>
-    <div id="status"></div>
+  <!-- Dashboard -->
+  <div id="app" style="display:none;" class="bg-white p-8 rounded shadow-lg">
+    <h1 class="text-2xl font-bold mb-4 text-center">Create Post</h1>
+    <input type="text" id="title" placeholder="Post Title" class="border p-2 w-full mb-2 rounded">
+    <input type="text" id="slug" placeholder="Post Slug" class="border p-2 w-full mb-2 rounded">
+    <input type="text" id="excerpt" placeholder="Post Excerpt" class="border p-2 w-full mb-2 rounded">
+    <textarea id="content" placeholder="Post Content" class="border p-2 w-full h-64 mb-2 rounded" 
+    onpaste="this.value += event.clipboardData.getData('text')"></textarea>
+    <button id="publish" class="bg-green-600 text-white p-2 rounded hover:bg-green-700">Publish</button>
+    <div id="status" class="mt-2 text-center font-semibold"></div>
   </div>
 
-  <script>
-    const apiBase = 'https://api.infliker.fun/api';
+</div>
 
-    // Login
-    document.getElementById('login').onclick = async ()=>{
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const res = await fetch(apiBase+'/auth/login', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({email,password})
-      });
-      const data = await res.json();
-      if(data.ok){
-        localStorage.setItem('token', data.token);
-        document.getElementById('auth').style.display='none';
-        document.getElementById('app').style.display='block';
-      } else alert('Login failed: '+data.error);
-    }
+<script>
+const apiBase = 'https://api.infliker.fun/api';
 
-    // Publish post
-    document.getElementById('publish').onclick = async ()=>{
-      const body = {
-        title: document.getElementById('title').value,
-        slug: document.getElementById('slug').value,
-        content: document.getElementById('content').value,
-        excerpt: document.getElementById('excerpt').value,
-        published: true
-      };
-      const token = localStorage.getItem('token');
-      const res = await fetch(apiBase+'/posts',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if(data.ok) document.getElementById('status').innerText='Published';
-      else document.getElementById('status').innerText='Error: '+data.error;
-    }
-  </script>
+// Login
+document.getElementById('login').onclick = async ()=>{
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const res = await fetch(apiBase+'/auth/login',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email,password})
+  });
+  const data = await res.json();
+  if(data.ok){
+    localStorage.setItem('token', data.token);
+    document.getElementById('auth').style.display='none';
+    document.getElementById('app').style.display='block';
+  } else alert('Login failed: '+data.error);
+}
+
+// Publish post
+document.getElementById('publish').onclick = async ()=>{
+  const body = {
+    title: document.getElementById('title').value,
+    slug: document.getElementById('slug').value,
+    content: document.getElementById('content').value,
+    excerpt: document.getElementById('excerpt').value,
+    published: true
+  };
+  const token = localStorage.getItem('token');
+  if(!token){ alert('Unauthorized, please login again'); return; }
+
+  const res = await fetch(apiBase+'/posts',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if(data.ok) document.getElementById('status').innerText='✅ Published';
+  else document.getElementById('status').innerText='❌ Error: '+data.error;
+}
+</script>
 </body>
 </html>
